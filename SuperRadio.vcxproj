@@ -152,16 +152,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Library Include="bass.lib" />
+    <Library Include="bassflac.lib" />
     <Library Include="basshls.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bass.dll" />
+    <None Include="bassflac.dll" />
     <None Include="basshls.dll" />
     <None Include="SuperRadio.def" />
     <None Include="SuperRadio.opl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bass.h" />
+    <ClInclude Include="bassflac.h" />
     <ClInclude Include="basshls.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleIni\ConvertUTF.h" />

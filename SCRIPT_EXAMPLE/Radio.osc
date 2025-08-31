@@ -75,7 +75,7 @@
 {macro:Radio_frame}
 	(L.L.KR_Power)
 	{if}
-		(L.L.KR_Channel) (S.L.SndExt_Radio)
+		(L.L.KR_Channel) 0 max (L.L.SndExt_RadioCHCount) min (S.L.SndExt_Radio)
 	{else}
 		0 (S.L.SndExt_Radio)
 	{endif}

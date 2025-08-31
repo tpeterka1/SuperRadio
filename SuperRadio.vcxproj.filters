@@ -21,6 +21,9 @@
     <Library Include="basshls.lib">
       <Filter>Pliki zasobów</Filter>
     </Library>
+    <Library Include="bassflac.lib">
+      <Filter>Pliki zasobów</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <None Include="bass.dll">
@@ -33,6 +36,9 @@
       <Filter>Pliki zasobów</Filter>
     </None>
     <None Include="basshls.dll">
+      <Filter>Pliki zasobów</Filter>
+    </None>
+    <None Include="bassflac.dll">
       <Filter>Pliki zasobów</Filter>
     </None>
   </ItemGroup>
@@ -50,6 +56,9 @@
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="bassflac.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>

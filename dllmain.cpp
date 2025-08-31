@@ -1,6 +1,7 @@
-﻿// dllmain.cpp : Definiuje punkt wejścia dla aplikacji DLL.
+// dllmain.cpp : Definiuje punkt wejścia dla aplikacji DLL.
 #include "bass.h"
 #include "basshls.h"
+#include "bassflac.h"
 #include "SimpleIni/SimpleIni.h"
 #include "SimpleIni/ConvertUTF.h"
 #include <thread>
@@ -13,12 +14,13 @@ char** CH;
 char* Playlist_reldirpath;
 vector <char*> Playlist_files;
 size_t CH_count;
-float val[4], pluginSetPlaylist;
+float val[5], pluginSetPlaylist;
 float volume, legacyvolume;
 int state, playlistSetState;
 float playlistState;
 HSTREAM BASSstream;
-bool threadstop, playlistMode, writeMode;
+HPLUGIN flac;
+bool threadstop, playlistMode, writeMode, writeChCountOnce;
 
 
 #ifdef _DEBUG
@@ -49,16 +51,21 @@ void loadconfigfile() {
 		CH_count = ini.GetLongValue("Radio", "CHcount", 9);
 		legacyvolume = atof(ini.GetValue("Radio", "legacyvolume", "0.15"));
 
+		writeChCountOnce = true;
+
 		CH = new char*[CH_count+1];
 		
+		// Load TAPE URL
 		const char* ch0 = ini.GetValue("Radio", "TAPE", "NONE");
 		size_t ch0Size = strlen(ch0);
 		CH[0] = new char[ch0Size + 1]{0};
 		memcpy(CH[0], ch0, ch0Size);
 
+		// Load channel URLs and names
 		for (size_t i = 1; i <= CH_count; i++) {
 			char chstr[10];
-			sprintf(chstr, "CH%i", i);
+			sprintf(chstr, "CH%zu", i);
+
 			const char* churl = ini.GetValue("Radio", chstr, "NONE");
 			size_t churlSize = strlen(churl);
 			CH[i] = new char[churlSize+1]{0};
@@ -67,10 +74,8 @@ void loadconfigfile() {
 
 		//char counts[100];
 		//sprintf(counts, "Loaded URLs: %i", CH_count);
-		printf("Loaded URLs: %i\n", CH_count);
+		printf("Loaded URLs: %zu\n", CH_count);
 	}
-
-
 }
 
 /*
@@ -93,8 +98,14 @@ void __stdcall PluginStart(HWND aOwner)
 		printf("BASS failed to initialize. Error code: %i\n", BASS_ErrorGetCode());
 	}else
 		printf("BASS library loaded successfully\n");
-	loadconfigfile();
 
+	flac = BASS_PluginLoad("bassflac", 0);
+	if (flac == 0)
+		printf("Failed to load FLAC plugin. Error code: %i\n", BASS_ErrorGetCode());
+	else
+		printf("FLAC plugin loaded successfully\n");
+
+	loadconfigfile();
 }
 
 void StopMusic() {
@@ -143,7 +154,6 @@ void parsePlaylist(string data) {
 		}
 		pos += fnLength;
 		pos += 1;
-
 	}
 }
 
@@ -299,16 +309,26 @@ void __stdcall AccessVariable(unsigned short varindex, float* value, bool* write
 		val[varindex] = (float)*value;
 	if (varindex == 3) 
 		val[varindex] = (float)*value;
+
+	// Write current playlist index (only when changed)
 	if (varindex == 3 && writeMode) {
 		*value = playlistState;
 		*write = true;
 		writeMode = false;
+	}
+
+	// Write channel count (only once at the start)
+	if (varindex == 4 && writeChCountOnce) {
+		*value = CH_count;
+		*write = true;
+		writeChCountOnce = false;
 	}
 }
 
 
 void __stdcall AccessStringVariable(unsigned short varindex, wchar_t* value, bool* write)
 {
+
 }
 
 void __stdcall AccessTrigger(unsigned short triggerindex, bool* active)
@@ -329,13 +349,20 @@ void __stdcall PluginFinalize()
 	threadstop = true;
 	mth.join();
 	StopMusic();
+	BASS_PluginFree(flac);
 	BASS_Free();
 	cleanupPlaylist();
 	for (size_t i = 0; i<=CH_count; i++)
 		delete[] CH[i];
 	delete[] CH;
 	delete[] Playlist_reldirpath;
-#ifdef _DEBUG
-	FreeConsole();
-#endif
+
+	#ifdef _DEBUG
+		FreeConsole();
+	#endif
+
+	#ifndef _DEBUG
+		if (debugmode)
+			FreeConsole();
+	#endif
 }
